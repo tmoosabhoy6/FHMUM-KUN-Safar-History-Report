@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Kun Safar History{% endblock %}</title>
+<style>
+  :root { --ink:#16232d; --muted:#5b6b77; --line:#d8e0e6; --bg:#f6f8f9; --card:#fff;
+          --accent:#1f3a4d; --accent-2:#2f6f8f; --gold:#b98a2e; --gold-bg:#fff4d6; --err:#a33; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 "Segoe UI", system-ui, -apple-system, sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--accent); color:#fff; padding:18px 24px; }
+  header h1 { margin:0; font-size:20px; font-weight:600; letter-spacing:.2px; }
+  header p { margin:2px 0 0; color:#c9d8e2; font-size:13px; }
+  main { max-width:1200px; margin:0 auto; padding:24px 16px 60px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; margin-bottom:20px; }
+  label { display:block; font-size:13px; color:var(--muted); margin-bottom:4px; }
+  input { width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; }
+  button, .btn { display:inline-block; background:var(--accent-2); color:#fff; border:0; border-radius:6px;
+                 padding:10px 18px; font:inherit; font-weight:600; cursor:pointer; text-decoration:none; }
+  button:disabled { opacity:.6; cursor:wait; }
+  .hint { color:var(--muted); font-size:13px; }
+  .err { color:var(--err); font-weight:600; }
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--accent); color:#fff; font-weight:600; position:sticky; top:0; }
+  tr.day td { background:#d9e7f0; font-weight:700; font-size:15px; }
+  tr.tour td { background:#f3f6f8; font-weight:600; }
+  td.count { background:var(--gold-bg); font-weight:700; text-align:center; }
+  td.notes { color:var(--muted); font-size:13px; white-space:pre-line; min-width:260px; max-width:440px; }
+  td.dates { min-width:200px; max-width:420px; }
+  td.dates span { display:inline-block; margin:0 10px 2px 0; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .nowrap { white-space:nowrap; }
+  td.its { font-variant-numeric:tabular-nums; }
+  .scroll { overflow-x:auto; }
+  .stats { display:flex; gap:24px; flex-wrap:wrap; margin:6px 0 14px; }
+  .stats b { font-size:22px; display:block; }
+  #log { font-family:ui-monospace, monospace; font-size:13px; color:var(--muted); white-space:pre-line; }
+</style>
+</head>
+<body>
+<header>
+  <h1>FHMUM Kun Safar History Report</h1>
+  <p>Read-only report from NKERP · arrivals, flights and previous visits per ITS</p>
+</header>
+<main>{% block body %}{% endblock %}</main>
+</body>
+</html>

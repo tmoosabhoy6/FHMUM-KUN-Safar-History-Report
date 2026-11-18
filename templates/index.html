@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block body %}
+<form id="form" class="card">
+  <div class="grid">
+    <div><label for="date_from">Arrivals from</label><input type="date" id="date_from" name="date_from" value="{{ date_from }}" required></div>
+    <div><label for="date_to">Arrivals to</label><input type="date" id="date_to" name="date_to" value="{{ date_to }}" required></div>
+    <div><label for="min_age">Minimum age on arrival</label><input type="number" id="min_age" name="min_age" value="{{ min_age }}" min="0" max="120"></div>
+    <div style="grid-column:span 2"><label for="office">Office name (exact, as in NKERP)</label><input id="office" name="office" value="{{ office }}"></div>
+  </div>
+  <div class="grid" style="margin-top:14px">
+    <div><label for="login_id">NKERP login ID</label><input id="login_id" name="login_id" autocomplete="username"
+         placeholder="{{ 'saved on server — optional' if server_credentials else '' }}"></div>
+    <div><label for="password">NKERP password</label><input type="password" id="password" name="password" autocomplete="current-password"
+         placeholder="{{ 'saved on server — optional' if server_credentials else '' }}"></div>
+  </div>
+  <p class="hint">Credentials are only used for this run and are never stored.</p>
+  <button id="go" type="submit">Generate report</button>
+  <span id="msg" class="err"></span>
+  <div id="log" style="margin-top:12px"></div>
+</form>
+<div class="card hint">
+  <b>What's in the report</b><br>
+  Every adult ({{ min_age }}+) arriving with the selected office in the date range, grouped by arrival date and tour.
+  Next to each tour: its arrival and departure flight codes and times. For each ITS: the dates of every previous NKERP
+  tour (any office) from earliest to latest, then the total number of visits <i>including this one</i>.
+  Notes list packages, tours that were not counted (deleted, cancelled, or removed from the tour), and any personal flight differences.
+</div>
+<script>
+const form = document.getElementById('form'), go = document.getElementById('go'),
+      msg = document.getElementById('msg'), log = document.getElementById('log');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault(); msg.textContent = ''; log.textContent = 'Starting…'; go.disabled = true;
+  try {
+    const res = await fetch('/run', {method: 'POST', body: new FormData(form)});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not start');
+    poll(data.job);
+  } catch (err) { msg.textContent = err.message; log.textContent = ''; go.disabled = false; }
+});
+async function poll(job) {
+  const res = await fetch('/status/' + job); const s = await res.json();
+  log.textContent = s.log.join('\n');
+  if (s.state === 'done') { location.href = '/result/' + job; return; }
+  if (s.state === 'error') { msg.textContent = s.error; go.disabled = false; return; }
+  setTimeout(() => poll(job), 1200);
+}
+</script>
+{% endblock %}
