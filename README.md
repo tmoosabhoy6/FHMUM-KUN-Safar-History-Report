@@ -70,7 +70,7 @@ NKERP_PASSWORD=...
 npx wrangler dev
 ```
 
-Deploy, and change a secret (e.g. a new NKERP password or access code):
+Deploy, and change a secret (e.g. a new NKERP password):
 
 ```bash
 npx wrangler deploy
