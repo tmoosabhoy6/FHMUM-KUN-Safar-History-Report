@@ -1,74 +1,82 @@
-# FHMUM Kun Safar History Report
+# Kun Safar History
 
-A small app that reads NKERP (read-only) and builds an Excel report of every **Fayz E Husayni Trust Mumbai**
-zaereen arriving in a chosen date range. For each person it shows the dates of their previous visits to Iraq, and
-the total number of visits including the current one.
+Live app: **https://kun-safar-history.tmoosabhoy6.workers.dev** (Cloudflare Workers, free plan)
 
-## Run it
+The app reads NKERP (read-only) and does two things:
 
-```bash
-pip install -r requirements.txt
-python app.py                 # open http://localhost:8000
-```
+1. **Look up ITS:** search one or many ITS numbers at once, from any office (FHMUM, Office Tours, Golden,
+   and so on). For each person it shows how many times they have visited, their most recent trip, every
+   earlier trip, and any trip already booked. You can type ITS numbers one by one, or paste a whole message:
+   numbers split by commas, full stops, spaces or new lines are all picked out. Download the result as Excel.
+2. **Arrivals report:** every adult (18+) arriving with **Fayz E Husayni Trust Mumbai** in a date range,
+   grouped by arrival date and tour, with each tour's flight details. Download as Excel.
 
-Pick the arrival dates, enter your NKERP login ID and password, press **Generate report**, then **Download Excel**.
-A week of arrivals takes about 10–20 seconds.
+The NKERP login is stored as an encrypted Cloudflare secret, so nobody types it. Staff enter a short
+access code once per device, and it is remembered for 30 days.
 
-To skip typing the login each time, copy `.env.example` to `.env` and fill it in. `.env` is git-ignored, and the
-credentials are only kept in memory for the run.
+## Excel layout
 
-Command line:
+**Arrivals report** (sheet "Report"):
 
-```bash
-export NKERP_LOGIN_ID=...  NKERP_PASSWORD=...
-python cli.py --from 2026-12-01 --to 2026-12-07 --out kun-safar.xlsx
-```
+| A | B | C | D | E | F | G … | last |
+|---|---|---|---|---|---|---|---|
+| `1-Dec` | | | | | | | |
+| | `2696` | `Arr IA 442 01-Dec-2026 07:00 \| Dep IA 441 10-Dec-2026 21:30` | | | | | tour ref, package, adults |
+| | | ITS | Name | Times visited (incl. this one) | Most recent trip | earlier trips, newest → oldest | Notes |
 
-## The Excel file
+**ITS lookup** (sheet "ITS lookup"): ITS, Name, Times visited, Most recent trip, earlier trips (newest →
+oldest), Next booked trip, Notes. The "Trips" sheet lists every trip, one per row.
 
-**Report** sheet (same layout as the hand-made template):
+Notes include packages ("12-Feb-2019 via Permanent KUN Safar 1440"), trips that were not counted, later
+bookings, and personal flights that differ from the tour's.
 
-| A | B | C | D, E, F … | Total | Notes | Name |
-|---|---|---|---|---|---|---|
-| `1-Dec` (arrival date) | | | | | | |
-| | `2696` (tour no.) | `Arr IA 442 · 01-Dec-2026 07:00 \| Dep IA 441 · 10-Dec-2026 21:30` | | | tour ref · package · adults | |
-| | | `20359107` (ITS) | previous visit dates, earliest → latest | `3` | packages, notes | name |
+## Counting rules
 
-* The **Total visits** column comes right after the longest list of previous visits, so every count lines up.
-* **Notes** holds the package of this trip, packages of past trips ("12-Feb-2019 via Permanent KUN Safar 1440"),
-  tours that were not counted, later bookings, and the person's own flights when they differ from the tour's.
+* A trip counts unless the tour was deleted or cancelled, or the person was removed from it. Office Tours
+  count.
+* Arrivals report: times visited = this trip + every earlier trip, from any office. Adults only, meaning
+  age 18+ on the arrival date (adjustable). Infants are always left out.
+* ITS lookup: times visited = every counted trip, including a booked upcoming one. "Most recent trip" is
+  the latest one that has already arrived.
 
-**Details** is the same data as a flat, filterable table (one row per person, with flights, age, tour references).
-**About** lists the settings, the rules, and how many people were left out and why.
+## How it works
 
-## Rules
+* `src/nkerp.js` is the NKERP client. It can only call `api/accounts/Login` and
+  `api/tours/GeneralSearchPassengers` (General Search › Passengers). Passport numbers, phone numbers and
+  addresses are dropped before anything leaves the Worker.
+  * By `ArrivalFrom`/`ArrivalTo`/`OfficeName` it gives the arrivals.
+  * By `ITSIds` (newline-separated) with a wide date range it gives each ITS's full history.
+* `src/api.js` holds the Worker API (`/api/arrivals`, `/api/history`, `/api/unlock`). `src/worker.js` is
+  the entry point.
+* `public/` is the app itself. `report.js` builds the reports, `excel.js` writes the workbooks (ExcelJS,
+  in the browser), and `app.js` is the interface. `scripts/embed-site.js` bundles these files into the
+  Worker on every deploy.
 
-* **Office:** the tour's Office Name must be exactly the selected office (default `Fayz E Husayni Trust Mumbai`).
-* **Arrival date:** the tour's start date in Iraq, within the chosen range (both ends included).
-* **Adults only:** age on the arrival date must be 18 or more (adjustable). Infants are always excluded.
-* **Who is on the tour:** people on deleted or cancelled tours, or removed from a tour, are left out.
-* **Previous visits:** every other NKERP tour of the same ITS that arrived before this one, from **any**
-  office, Office Tours included. Deleted or cancelled tours, and tours the person was removed from, are not
-  counted; they are listed in Notes.
-* **Total visits:** previous visits + this one.
-* **Tour flight details:** the arrival and departure flight codes and times most of the tour's passengers have.
-
-## How it reads NKERP
-
-`nkerp_report/client.py` can only call two endpoints, and any other path raises an error before a request is
-made:
-
-* `POST api/accounts/Login` starts the session.
-* `POST api/tours/GeneralSearchPassengers` is NKERP's General Search › Passengers list. It returns one row per
-  person per tour: ITS, date of birth, office, package, tour reference, arrival and departure, and flight codes
-  and times.
-  * Filtered by `ArrivalFrom` / `ArrivalTo` / `OfficeName`, it gives the arrivals.
-  * Filtered by `ITSIds` (newline-separated; commas return nothing) with a wide arrival range, it gives each
-    ITS's full tour history. This is the same history that the Discount Demarcation and Kun Ziyarat Status
-    screens show.
-
-## Tests
+## Develop and deploy
 
 ```bash
-python -m unittest discover -s tests
+npm install
+npm test
 ```
+
+For local runs, put the secrets in `.dev.vars` (git-ignored):
+
+```
+NKERP_LOGIN_ID=...
+NKERP_PASSWORD=...
+APP_PASSCODE=...
+```
+
+```bash
+npx wrangler dev
+```
+
+Deploy, and change a secret (e.g. a new NKERP password or access code):
+
+```bash
+npx wrangler deploy
+npx wrangler secret put NKERP_PASSWORD
+npx wrangler secret put APP_PASSCODE
+```
+
+Deleting the `APP_PASSCODE` secret removes the access-code screen.

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kun Safar History</title>
+<meta name="description" content="Look up Karbala and Najaf trips for any ITS, and build the FHMUM arrivals report from NKERP.">
+<meta name="theme-color" content="#0F2A2E">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Khatam: the eight-point star of two squares, as in Fatimid tilework -->
+    <symbol id="khatam" viewBox="-50 -50 100 100">
+      <path d="M0-48 13.6-32.8 33.9-33.9 32.8-13.6 48 0 32.8 13.6 33.9 33.9 13.6 32.8 0 48-13.6 32.8-33.9 33.9-32.8 13.6-48 0-32.8-13.6-33.9-33.9-13.6-32.8Z"/>
+    </symbol>
+    <pattern id="lattice" width="96" height="96" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M48 14 58 34 78 24 68 44 88 48 68 52 78 72 58 62 48 82 38 62 18 72 28 52 8 48 28 44 18 24 38 34Z"/>
+        <path d="M0 0 14 14M96 0 82 14M0 96 14 82M96 96 82 82"/>
+        <circle cx="48" cy="48" r="7"/>
+      </g>
+    </pattern>
+  </defs>
+</svg>
+
+<header class="masthead">
+  <svg class="masthead__lattice" aria-hidden="true"><rect width="100%" height="100%" fill="url(#lattice)"/></svg>
+  <div class="masthead__inner">
+    <div class="brand">
+      <svg class="brand__star" aria-hidden="true"><use href="#khatam"/></svg>
+      <div>
+        <h1>Kun Safar History</h1>
+        <p class="brand__line">Every trip to Karbala and Najaf, for any ITS, read straight from NKERP.</p>
+      </div>
+    </div>
+    <nav class="modes" role="tablist" aria-label="What do you want to do?">
+      <button role="tab" id="tab-its" aria-controls="panel-its" aria-selected="true">Look up ITS</button>
+      <button role="tab" id="tab-arrivals" aria-controls="panel-arrivals" aria-selected="false" tabindex="-1">Arrivals report</button>
+      <span class="modes__ink" aria-hidden="true"></span>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ITS lookup -->
+  <section id="panel-its" role="tabpanel" aria-labelledby="tab-its" class="panel">
+    <form id="its-form" class="composer" autocomplete="off">
+      <label for="its-input" class="composer__label">ITS numbers</label>
+      <div class="chipfield" id="chipfield">
+        <ul class="chips" id="chips" aria-live="polite"></ul>
+        <input id="its-input" inputmode="numeric" placeholder="Type or paste ITS numbers"
+               aria-describedby="its-help">
+      </div>
+      <p id="its-help" class="hint">Searches every office: FHMUM, Office Tours and any other tour operator.</p>
+
+      <div class="paste" id="paste">
+        <button type="button" class="paste__toggle" id="paste-toggle" aria-expanded="false" aria-controls="paste-body">
+          <svg aria-hidden="true"><use href="#khatam"/></svg> Paste a message or list
+        </button>
+        <div class="paste__body" id="paste-body" hidden>
+          <textarea id="paste-text" rows="5"
+            placeholder="Paste anything here: a WhatsApp message, a column from Excel, numbers split by commas, full stops or new lines. Every ITS number in it is picked out."></textarea>
+          <div class="paste__foot">
+            <span id="paste-count" class="hint">No ITS numbers found yet.</span>
+            <button type="button" class="btn btn--quiet" id="paste-add" disabled>Add to list</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer__foot">
+        <span id="ready" class="ready">Add at least one ITS number.</span>
+        <div class="composer__actions">
+          <button type="button" class="btn btn--quiet" id="its-clear" hidden>Clear list</button>
+          <button type="submit" class="btn btn--gold" id="its-search" disabled>Search</button>
+        </div>
+      </div>
+    </form>
+
+    <div id="its-status" class="status" role="status" aria-live="polite"></div>
+    <div id="its-results" class="results" hidden>
+      <div class="results__bar">
+        <p id="its-summary" class="results__summary"></p>
+        <button class="btn btn--ink" id="its-download">Download Excel</button>
+      </div>
+      <ol class="ledger" id="ledger"></ol>
+    </div>
+  </section>
+
+  <!-- Arrivals report -->
+  <section id="panel-arrivals" role="tabpanel" aria-labelledby="tab-arrivals" class="panel" hidden>
+    <form id="arr-form" class="composer composer--arrivals">
+      <div class="fields">
+        <label class="field"><span>Arriving from</span><input type="date" id="arr-from" required></label>
+        <label class="field"><span>Arriving until</span><input type="date" id="arr-to" required></label>
+        <label class="field field--age"><span>Minimum age</span><input type="number" id="arr-age" min="0" max="120" value="18"></label>
+        <label class="field field--office"><span>Office, exactly as NKERP writes it</span><input id="arr-office" value="Fayz E Husayni Trust Mumbai"></label>
+      </div>
+      <div class="composer__foot">
+        <span class="hint">Adults on every tour arriving in these dates, with each person's visit count and most recent trip.</span>
+        <button type="submit" class="btn btn--gold" id="arr-run">Build report</button>
+      </div>
+    </form>
+
+    <div id="arr-status" class="status" role="status" aria-live="polite"></div>
+    <div id="arr-results" class="results" hidden>
+      <div class="results__bar">
+        <p id="arr-summary" class="results__summary"></p>
+        <button class="btn btn--ink" id="arr-download">Download Excel</button>
+      </div>
+      <div id="arr-days"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">Read-only. Nothing in NKERP is changed by this app.</footer>
+
+<div class="lock" id="lock" hidden>
+  <svg class="lock__lattice" aria-hidden="true"><rect width="100%" height="100%" fill="url(#lattice)"/></svg>
+  <form class="lock__card" id="lock-form">
+    <svg class="lock__star" aria-hidden="true"><use href="#khatam"/></svg>
+    <h2>Kun Safar History</h2>
+    <p>Enter the access code to open the app on this device. You'll stay signed in for 30 days.</p>
+    <input type="password" id="lock-code" aria-label="Access code" placeholder="Access code" autocomplete="current-password" required>
+    <button class="btn btn--gold" type="submit">Open the app</button>
+    <p class="lock__err" id="lock-err" role="alert"></p>
+  </form>
+</div>
+
+<template id="tpl-person">
+  <li class="person">
+    <div class="person__who">
+      <span class="person__its"></span>
+      <h3 class="person__name"></h3>
+      <p class="person__recent"></p>
+    </div>
+    <div class="person__tally">
+      <span class="stars" aria-hidden="true"></span>
+      <span class="count"><b></b><small></small></span>
+    </div>
+    <div class="thread" aria-hidden="true"><span class="thread__line"></span></div>
+    <button class="person__more" type="button" aria-expanded="false">Show trips</button>
+    <div class="person__trips" hidden></div>
+  </li>
+</template>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

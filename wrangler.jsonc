@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kun-safar-history",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  // Embeds public/ into the Worker before every deploy / dev run.
+  "build": { "command": "node scripts/embed-site.js", "watch_dir": "public" }
+  // Secrets (set with `npx wrangler secret put NAME`, never committed):
+  //   NKERP_LOGIN_ID, NKERP_PASSWORD - the NKERP login the app uses
+  //   APP_PASSCODE                   - access code staff enter once per device
+}

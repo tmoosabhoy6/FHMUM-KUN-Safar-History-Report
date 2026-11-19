@@ -1,7 +1,6 @@
+node_modules/
+.wrangler/
+.dev.vars
 .env
 *.xlsx
-__pycache__/
-*.pyc
-.venv/
-venv/
-.pytest_cache/
+src/generated/
