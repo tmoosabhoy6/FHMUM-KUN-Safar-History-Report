@@ -11,8 +11,8 @@ The app reads NKERP (read-only) and does two things:
 2. **Arrivals report:** every adult (18+) arriving with **Fayz E Husayni Trust Mumbai** in a date range,
    grouped by arrival date and tour, with each tour's flight details. Download as Excel.
 
-The NKERP login is stored as an encrypted Cloudflare secret, so nobody types it. Staff enter a short
-access code once per device, and it is remembered for 30 days.
+The NKERP login is stored as an encrypted Cloudflare secret, so nobody types it. The app opens
+straight away, with no access code.
 
 ## Excel layout
 
@@ -64,7 +64,6 @@ For local runs, put the secrets in `.dev.vars` (git-ignored):
 ```
 NKERP_LOGIN_ID=...
 NKERP_PASSWORD=...
-APP_PASSCODE=...
 ```
 
 ```bash
@@ -76,7 +75,7 @@ Deploy, and change a secret (e.g. a new NKERP password or access code):
 ```bash
 npx wrangler deploy
 npx wrangler secret put NKERP_PASSWORD
-npx wrangler secret put APP_PASSCODE
 ```
 
-Deleting the `APP_PASSCODE` secret removes the access-code screen.
+An optional access-code screen is built in but switched off. To turn it on, set an `APP_PASSCODE`
+secret (`npx wrangler secret put APP_PASSCODE`); to turn it off again, delete it.
